@@ -18,11 +18,11 @@ from .interviewreportcard import (
 class Study:
     def __init__(
         self,
-        target_information: list[str],
+        insights: list[str],
         research_questions: list[str] | None = None,
         interview_guide: list[dict] | None = None,
     ):
-        self.target_information: list[str] = target_information
+        self.insights: list[str] = insights
         self.research_questions: list[str] = research_questions or []
         self.interview_guide: list[dict] = interview_guide or []
         self.participants: list[Participant] = []
@@ -39,16 +39,16 @@ class Study:
         api_base: str | None = None,
         api_key: str | None = None,
     ) -> "Study":
-        """Generate target_information from a qualitative study description using an LLM."""
+        """Generate insights from a qualitative study description using an LLM."""
         llm = LLMClient(model=model, api_base=api_base, api_key=api_key)
         prompt = prompts.STUDY_FROM_DESCRIPTION.format(description=description)
         result = llm.call(prompt, json_mode=True)
-        return cls(target_information=result["target_information"])
+        return cls(insights=result["insights"])
 
     def save(self, filepath: str) -> None:
         """Save this study to a JSON file."""
         data = {
-            "target_information": self.target_information,
+            "insights": self.insights,
             "research_questions": self.research_questions,
             "interview_guide": self.interview_guide,
             "participants": [p.to_dict() for p in self.participants],
@@ -62,7 +62,7 @@ class Study:
         with open(filepath, encoding="utf-8") as f:
             data = json.load(f)
         study = cls(
-            target_information=data["target_information"],
+            insights=data["insights"],
             research_questions=data.get("research_questions", []),
             interview_guide=data.get("interview_guide", []),
         )
@@ -82,63 +82,63 @@ class Study:
         for _ in range(n):
             self.participants.append(Participant())
 
-    def distribute_target_information(
+    def distribute_insights(
         self,
         avg_per_participant: float,
         ensure_all_distributed: bool = True,
     ) -> None:
         """
-        Assign target_indices to blank memories across all participants.
+        Assign insight_indices to blank memories across all participants.
 
         Each participant must have already called create_blank_memories().
-        avg_per_participant controls how many target items each participant
+        avg_per_participant controls how many insight items each participant
         knows about on average. If ensure_all_distributed is True, every
-        target item will appear in at least one participant's memories.
+        insight item will appear in at least one participant's memories.
 
         Raises ValueError if a participant doesn't have enough blank memories
-        to accommodate their assigned target items.
+        to accommodate their assigned insight items.
         """
         if not self.participants:
             return
 
-        T = len(self.target_information)
+        T = len(self.insights)
         if T == 0:
             return
 
-        target_count = max(1, min(T, round(avg_per_participant)))
+        insight_count = max(1, min(T, round(avg_per_participant)))
 
-        # Step 1: assign a set of target indices to each participant
+        # Step 1: assign a set of insight indices to each participant
         assignments: list[list[int]] = []
         for _ in self.participants:
-            indices = random.sample(range(T), target_count)
+            indices = random.sample(range(T), insight_count)
             assignments.append(indices)
 
-        # Step 2: gap-fill so every target index is covered
+        # Step 2: gap-fill so every insight index is covered
         if ensure_all_distributed:
             covered = set(idx for a in assignments for idx in a)
             missing = set(range(T)) - covered
             for idx in missing:
-                # give it to the participant with the fewest targets so far
+                # give it to the participant with the fewest insights so far
                 least = min(range(len(assignments)), key=lambda i: len(assignments[i]))
                 assignments[least].append(idx)
 
         # Step 3: assign indices to blank memory slots
-        for participant, target_indices in zip(self.participants, assignments):
+        for participant, insight_indices in zip(self.participants, assignments):
             blank = [m for m in participant.memories if m.is_blank]
-            needed = len(target_indices)
+            needed = len(insight_indices)
             if len(blank) < needed:
                 raise ValueError(
                     f"Participant has {len(blank)} blank memories but needs "
-                    f"{needed} target slots. Call create_blank_memories() with "
+                    f"{needed} insight slots. Call create_blank_memories() with "
                     f"a larger value first."
                 )
             random.shuffle(blank)
-            for slot, target_idx in zip(blank, target_indices):
-                slot.target_indices = [target_idx]
+            for slot, insight_idx in zip(blank, insight_indices):
+                slot.insight_indices = [insight_idx]
 
     def generate_all_memories(
         self,
-        target_info: list[str] | None = None,
+        insights: list[str] | None = None,
         model: str | None = None,
         api_base: str | None = None,
         api_key: str | None = None,
@@ -146,13 +146,13 @@ class Study:
         """
         Generate memories for all participants in a single batch LLM call.
 
-        Collects nontarget and target memory prompts from every participant,
+        Collects background and insight memory prompts from every participant,
         submits them as one batch via LLMClient.batch_call(), then routes
         results back. Requires a batch-compatible model (openai, azure, gemini).
 
-        target_info defaults to self.target_information when not provided.
+        insights defaults to self.insights when not provided.
         """
-        prompts_list, routing = self._build_memory_prompts(target_info)
+        prompts_list, routing = self._build_memory_prompts(insights)
 
         if not prompts_list:
             return
@@ -163,23 +163,23 @@ class Study:
 
     def _build_memory_prompts(
         self,
-        target_info: list[str] | None = None,
+        insights: list[str] | None = None,
     ) -> tuple[list[str], list[tuple[str, int]]]:
         """Collect memory prompts and their routing across all participants."""
-        resolved_target_info = target_info if target_info is not None else self.target_information
+        resolved_insights = insights if insights is not None else self.insights
 
         prompts_list: list[str] = []
         routing: list[tuple[str, int]] = []
 
         for i, p in enumerate(self.participants):
-            prompt, n = p._build_nontarget_memories_prompt()
+            prompt, n = p._build_background_memories_prompt()
             if n > 0:
                 prompts_list.append(prompt)
-                routing.append(("nontarget", i))
-            prompt, n = p._build_target_memories_prompt(resolved_target_info)
+                routing.append(("background", i))
+            prompt, n = p._build_insight_memories_prompt(resolved_insights)
             if n > 0:
                 prompts_list.append(prompt)
-                routing.append(("target", i))
+                routing.append(("insight", i))
 
         return prompts_list, routing
 
@@ -191,14 +191,14 @@ class Study:
         """Route batch results back to the participants that produced them."""
         for result, (kind, p_idx) in zip(results, routing):
             p = self.participants[p_idx]
-            if kind == "nontarget":
-                p._apply_nontarget_memories_result(result["memories"])
+            if kind == "background":
+                p._apply_background_memories_result(result["memories"])
             else:
-                p._apply_target_memories_result(result["memories"])
+                p._apply_insight_memories_result(result["memories"])
 
     def submit_all_memories(
         self,
-        target_info: list[str] | None = None,
+        insights: list[str] | None = None,
         model: str | None = None,
         api_base: str | None = None,
         api_key: str | None = None,
@@ -213,7 +213,7 @@ class Study:
         object (with participants in the same order) must be used to retrieve.
         Returns an empty handle (no batch_id) if there are no memories to build.
         """
-        prompts_list, routing = self._build_memory_prompts(target_info)
+        prompts_list, routing = self._build_memory_prompts(insights)
         if not prompts_list:
             return {"function": "generate_all_memories", "batch_id": None, "routing": []}
 
@@ -254,6 +254,7 @@ class Study:
         model: str | None = None,
         api_base: str | None = None,
         api_key: str | None = None,
+        use_batch: bool = False,
     ) -> dict:
         """
         Evaluate interview quality with the InterviewReportCard suite.
@@ -286,6 +287,9 @@ class Study:
             model, api_base, api_key: Optional LLM overrides forwarded to the
                 three LLM-judged evaluation calls (conversation_length makes no
                 LLM calls, so these don't apply to it).
+            use_batch: If True, forward use_batch=True to the three LLM-judged
+                evaluation calls, submitting their prompts as provider batch
+                jobs instead of one call at a time.
 
         Returns:
             {"conversation_length": {...}, "participant_responses": {...},
@@ -313,7 +317,7 @@ class Study:
             }
 
         transcripts = [p.transcript for p in self.participants]
-        kwargs = dict(model=model, api_base=api_base, api_key=api_key)
+        kwargs = dict(model=model, api_base=api_base, api_key=api_key, use_batch=use_batch)
 
         return {
             "conversation_length": evaluate_conversation_length(

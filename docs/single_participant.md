@@ -21,20 +21,20 @@ p.disclosure = "Medium"
 # 2. Create memory slots
 p.create_blank_memories(5)
 
-# 3. Manually mark two memories as target memories
-#    (target_indices reference a list you maintain yourself)
-p.memories[0].target_indices = [0]
-p.memories[1].target_indices = [1]
+# 3. Manually mark two memories as insight memories
+#    (insight_indices reference a list you maintain yourself)
+p.memories[0].insight_indices = [0]
+p.memories[1].insight_indices = [1]
 
-# 4. Generate target memories (pass your own topic strings)
+# 4. Generate insight memories (pass your own topic strings)
 topics = [
     "What prompted the participant's career transition and their emotional response",
     "What the participant misses about their previous role",
 ]
-p.generate_target_memories(topics)
+p.generate_insight_memories(topics)
 
-# 5. Generate non-target memories (fills the remaining 3 blank slots)
-p.generate_nontarget_memories()
+# 5. Generate background memories (fills the remaining 3 blank slots)
+p.generate_background_memories()
 
 # 6. Interview the participant
 response = p.ask("What made you decide to switch careers?")
@@ -49,7 +49,7 @@ print(response)
 ```python
 # See all memories
 for i, m in enumerate(p.memories):
-    print(f"[{i}] target={m.target_indices} reflexive={m.reflexive} sensitive={m.sensitive}")
+    print(f"[{i}] insight={m.insight_indices} reflexive={m.reflexive} sensitive={m.sensitive}")
     print(f"     {m.content[:80]}...")
     print()
 
@@ -71,19 +71,19 @@ p.persona = "Jordan is a 45-year-old high school teacher with 20 years of experi
 
 m1 = Memory()
 m1.content = "I started teaching because I had a mentor in high school who changed my life."
-m1.target_indices = [0]
+m1.insight_indices = [0]
 m1.reflexive = True
 m1.sensitive = False
 
 m2 = Memory()
 m2.content = "Last spring I almost quit. I was burned out and couldn't see a way forward."
-m2.target_indices = [1]
+m2.insight_indices = [1]
 m2.reflexive = True
 m2.sensitive = True
 
 m3 = Memory()
 m3.content = "I coach the debate team after school on Tuesdays."
-# no target_indices — this is a non-target background memory
+# no insight_indices — this is a background memory
 
 p.memories = [m1, m2, m3]
 
@@ -99,8 +99,8 @@ Three approaches, applied in priority order:
 
 ```python
 response = p.ask("How did you cope?", model="gpt-5.5")
-p.generate_target_memories(topics, model="gpt-5.5")
-p.generate_nontarget_memories(model="gpt-5.5")
+p.generate_insight_memories(topics, model="gpt-5.5")
+p.generate_background_memories(model="gpt-5.5")
 study = Study.from_description(description, model="gpt-5.5")
 ```
 
@@ -120,7 +120,7 @@ os.environ["SIMSTUDY_MODEL"] = "claude-3-5-haiku-20241022"
 
 ## Notes
 
-- `generate_nontarget_memories()` only fills blank slots where `target_indices == []`. It is safe to call after `generate_target_memories()`.
-- `generate_target_memories(topics)` only fills blank slots where `target_indices != []`. The `topics` list should be indexed to match the values in each memory's `target_indices`.
+- `generate_background_memories()` only fills blank slots where `insight_indices == []`. It is safe to call after `generate_insight_memories()`.
+- `generate_insight_memories(topics)` only fills blank slots where `insight_indices != []`. The `topics` list should be indexed to match the values in each memory's `insight_indices`.
 - `ask()` appends every question and response to `p.transcript` in order. The full transcript is included in subsequent prompts, so the participant maintains conversational continuity automatically.
 - `ask()` retrieves the most semantically relevant memories for each question via cosine-similarity ranking. The number of memories passed to the prompt is controlled by `p.retrieval_top_k` (default `5`).

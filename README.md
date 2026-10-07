@@ -1,6 +1,10 @@
-# interviewplayground
+# InterviewPlayground
 
-A Python package for creating AI-simulated interview participants to test and evaluate qualitative research interviewer agents. Each simulated participant holds a persona, behavioral traits, and a memory system. Call `participant.ask(question)` to get a natural-language response grounded in that participant's persona and memories. The package also ships InterviewReportCard, an evaluation suite that scores interview transcripts so you can measure how well your own AI interviewer is performing.
+**InterviewPlayground** is the official code release for the paper [*InterviewPlayground: A Validated Simulation Environment for Evaluating AI Interviewers*](https://arxiv.org/abs/XXXX.XXXXX) <!-- TODO: arXiv link -->.
+
+It's a Python package for creating AI-simulated interview participants to test and evaluate interviewer agents. Each simulated participant holds a persona, behavioral traits, and a memory system. Call `participant.ask(question)` to get a participant response grounded in that participant's persona and memories. The package also includes **InterviewReportCard**, a validated evaluation suite that scores interview transcripts so you can measure how well your own AI interviewer is performing.
+
+Three ready-to-use presets, each built from a published qualitative study, let you start testing an interviewer immediately — no setup required. See [Citation](#citation) for how to cite the paper.
 
 ## Installation
 
@@ -11,16 +15,16 @@ pip install interviewplayground
 Or install from source in development mode:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/jonathanivey/interviewplayground.git
 cd interviewplayground
 pip install -e ".[dev]"
 ```
 
 ## Setup
 
-The package uses [LiteLLM](https://github.com/BerriAI/litellm), so it works with any provider LiteLLM supports — including OpenAI, Anthropic, Google Gemini, and self-hosted models via vLLM.
+The package uses [LiteLLM](https://github.com/BerriAI/litellm) to support closed model APIs and self-hosted models via vLLM.
 
-### API-based models (OpenAI, Anthropic, Gemini)
+### API-based models (e.g., OpenAI, Anthropic, Gemini)
 
 Set your API key and, if not using the default OpenAI model, the model name:
 
@@ -49,7 +53,7 @@ set_default_model("claude-3-5-haiku-20241022")
 
 ### Self-hosted models via vLLM
 
-vLLM is a first-class target for this package — both the participant simulator and the InterviewReportCard judge can run against a self-hosted model, not just hosted APIs.
+vLLM allows the participant simulator and the InterviewReportCard judge to run with a self-hosted model. See [examples/self_hosted_vllm.ipynb](../examples/self_hosted_vllm.ipynb) for a runnable walkthrough.
 
 #### Running a local vLLM server
 
@@ -71,7 +75,7 @@ set_default_model(
 
 ```python
 set_default_model(
-    "openai/Qwen/Qwen3.5-9B",
+    "openai/Qwen/Qwen3.5-4B",
     api_base="http://localhost:8000/v1",
     api_key="EMPTY",
     extra_body={"chat_template_kwargs": {"enable_thinking": False}},
@@ -159,124 +163,79 @@ All LLM-calling methods accept per-call overrides:
 
 ```python
 p.ask("How did you cope?", model="...", api_base="...", api_key="...")
-p.generate_target_memories(topics, model="...", api_base="...", api_key="...")
-p.generate_nontarget_memories(model="...", api_base="...", api_key="...")
+p.generate_insight_memories(topics, model="...", api_base="...", api_key="...")
+p.generate_background_memories(model="...", api_base="...", api_key="...")
 Study.from_description(description, model="...", api_base="...", api_key="...")
 ```
 
-> **Note on memory generation:** Generating 185 non-target memories in a single batch can take several minutes. The default LLM timeout is 600 seconds.
+> **Note on memory generation:** Generating 194 background memories in a single batch can take several minutes. The default LLM timeout is 600 seconds.
 
 ---
 
-## Full Workflow
+## Quickstart: Using Presets
 
-### Step 1 — Generate target information from a study description
-
-```python
-from interviewplayground import Study
-
-study = Study.from_description("""
-    A grounded theory study examining how informal caregivers of adults with dementia
-    manage their own wellbeing while providing care. We are interested in the strategies
-    they use, the support networks they rely on, and how their identity changes over time.
-""")
-
-print(study.target_information)
-# ['How caregivers first took on the caregiving role and whether it was a choice',
-#  'Daily routines caregivers use to maintain their own mental health', ...]
-```
-
-Or supply your own list directly:
+The fastest way to test an AI interviewer is against one of the three built-in presets — no LLM calls needed to load them.
 
 ```python
-study = Study(target_information=[
-    "How caregivers first took on the caregiving role",
-    "Support networks caregivers rely on",
-    ...
-])
-```
+from interviewplayground import load_preset
 
-### Step 2 — Create participants
+study = load_preset("obesity_weight_management")
 
-```python
-study.create_participants(3)
-```
-
-This creates 3 `Participant` objects with default personas and `"Medium"` traits.
-
-### Step 3 — Set personas and traits, create blank memories
-
-```python
+# Participants are ready to interview
 p = study.participants[0]
+print(p.persona)
 
-p.persona = (
-    "Maria is a 52-year-old woman who left her part-time job three years ago to care "
-    "for her mother, who has moderate Alzheimer's disease. She is warm and reflective "
-    "but carries significant grief about her mother's decline."
-)
-p.knowledge = "Medium"
-p.verbosity = "High"
-p.memory = "High"
-p.reflexivity = "High"
-p.disclosure = "Medium"
-p.understanding = "Medium"
-
-p.create_blank_memories(12)
-```
-
-Valid trait values: `"Low"`, `"Medium"`, `"High"`.
-
-Repeat for each participant.
-
-### Step 4 — Distribute target information
-
-```python
-study.distribute_target_information(
-    avg_per_participant=4.0,   # average number of target items each participant knows
-    ensure_all_distributed=True  # guarantee every target appears in at least one participant
-)
-```
-
-This assigns target indices to blank memory slots across participants. Participants will know about different subsets of the target information — like real study participants.
-
-### Step 5 — Generate non-target memories
-
-```python
-for p in study.participants:
-    p.generate_nontarget_memories()
-```
-
-One LLM call per participant. Fills blank non-target memory slots with autobiographical content consistent with the persona and traits.
-
-### Step 6 — Generate target memories
-
-```python
-for p in study.participants:
-    p.generate_target_memories(study.target_information)
-```
-
-One LLM call per participant. Fills blank target memory slots with memories grounded in the corresponding target information items.
-
-### Step 7 — Interview participants
-
-```python
-response = study.participants[0].ask("Can you tell me a bit about how you ended up in a caregiving role?")
+response = p.ask("How have weight conversations with your doctor gone?")
 print(response)
 ```
 
-Each call adds the question and response to `participant.transcript`. The participant's memories and full transcript context are included in the prompt automatically.
+Available presets:
+
+| Name | Topic | Participants |
+|---|---|---|
+| `obesity_weight_management` | Weight discussions in primary care and commercial program referrals | 30 |
+| `asian_american_politics` | Asian American identity and political preferences | 30 |
+| `genai_knowledge_work` | GenAI tools in knowledge work contexts | 30 |
+
+Each participant has 200 memories: 194 background memories unrelated to the study, plus 6 insight memories drawn (with replacement) from the study's 15 insights — the key findings of the published study each preset is based on. Different participants know about different subsets of the insights, just like real study participants. Each preset also includes `research_questions` and an `interview_guide`, described below.
+
+### Using the interview guide with your own AI interviewer
+
+Every preset's `study.research_questions` and `study.interview_guide` describe what the interview should cover — the same information a human interviewer would be briefed with. `interview_guide` is a list of topics, each with a list of specific subtopics:
 
 ```python
-# Inspect the transcript
-for turn in study.participants[0].transcript:
-    print(f"{turn['role'].capitalize()}: {turn['content']}\n")
+for topic in study.interview_guide:
+    print(topic["topic"])
+    for subtopic in topic["subtopics"]:
+        print(f"  - {subtopic}")
 ```
+
+To test your own AI interviewer against a preset, give it the research questions and interview guide as part of its instructions, the same way you'd brief a human interviewer:
+
+```python
+guide_text = "\n".join(
+    f"- {t['topic']}\n" + "\n".join(f"    - {s}" for s in t["subtopics"])
+    for t in study.interview_guide
+)
+
+interviewer_instructions = f"""\
+You are conducting a qualitative research interview. Your research questions are:
+{chr(10).join(f"- {q}" for q in study.research_questions)}
+
+Use the following interview guide to structure your questions:
+{guide_text}
+"""
+
+my_interviewer = MyInterviewer(system_prompt=interviewer_instructions)
+```
+
+See [Evaluating Interview Quality](#evaluating-interview-quality) below for how to run `my_interviewer` against the preset's participants and score the resulting transcripts.
 
 ---
 
 ## Evaluating Interview Quality
 
-Once a study's participants have transcripts (built up via `ask()`, as above), `study.evaluate()` runs the InterviewReportCard suite over them — no separate setup needed.
+Once a study's participants have transcripts (built up via `ask()`), `study.evaluate()` runs the InterviewReportCard suite over them — no separate setup needed.
 
 ```python
 results = study.evaluate()
@@ -317,44 +276,9 @@ results = study.evaluate()
 
 ---
 
-## Using Presets
+## Creating Your Own Study
 
-Three pre-built study presets are included for immediate testing — no LLM calls needed to load them.
-
-```python
-from interviewplayground import load_preset
-
-study = load_preset("obesity_weight_management")
-
-# Participants are ready to interview
-p = study.participants[0]
-print(p.persona)
-
-response = p.ask("How have weight conversations with your doctor gone?")
-print(response)
-```
-
-Available presets:
-
-| Name | Topic | Participants |
-|---|---|---|
-| `obesity_weight_management` | Weight discussions in primary care and commercial program referrals | 30 |
-| `asian_american_politics` | Asian American identity and political preferences | 30 |
-| `genai_knowledge_work` | GenAI tools in knowledge work contexts | 30 |
-
-Each participant has 200 memories (15 target memories covering the study's research questions, plus autobiographical background memories).
-
-### Adding a preset
-
-1. Build and fully populate a `Study` object (with participants and memories).
-2. Call `study.save("my_preset.json")` and move the file into `src/interviewplayground/presets/`.
-3. In `src/interviewplayground/presets/__init__.py`, add one entry to `_PRESETS`:
-   ```python
-   _PRESETS = {
-       ...
-       "my_preset": _PRESET_DIR / "my_preset.json",
-   }
-   ```
+Presets cover three interview topics out of the box. To build a `Study` from scratch for a new topic, participant population, or custom preset, see [docs/creating_a_preset.md](docs/creating_a_preset.md).
 
 ---
 
@@ -367,9 +291,21 @@ The prompts use standard Python `.format()` placeholders:
 | Prompt | Placeholders |
 |---|---|
 | `STUDY_FROM_DESCRIPTION` | `{description}` |
-| `NONTARGET_MEMORIES` | `{persona}`, `{knowledge}`, `{verbosity}`, `{memory}`, `{reflexivity}`, `{disclosure}`, `{understanding}`, `{n}` |
-| `TARGET_MEMORIES` | same as above plus `{topics_list}`, `{n}` |
+| `BACKGROUND_MEMORIES` | `{persona}`, `{knowledge}`, `{verbosity}`, `{memory}`, `{reflexivity}`, `{disclosure}`, `{understanding}`, `{n}` |
+| `INSIGHT_MEMORIES` | same as above plus `{topics_list}`, `{n}` |
 | `ASK` | same traits plus `{retrieved_memories}`, `{transcript}`, `{question}` |
+
+---
+
+## Examples
+
+Runnable Jupyter notebooks covering the main use cases are in [examples/](examples/):
+
+| Notebook | Covers |
+|---|---|
+| [running_interviewplayground.ipynb](examples/running_interviewplayground.ipynb) | Loading a preset, interviewing participants, and evaluating the interview with InterviewReportCard |
+| [creating_a_preset.ipynb](examples/creating_a_preset.ipynb) | Building a custom `Study` from scratch and registering it as a reusable preset |
+| [self_hosted_vllm.ipynb](examples/self_hosted_vllm.ipynb) | Using a self-hosted vLLM model as the participant simulator and/or InterviewReportCard judge |
 
 ---
 
@@ -386,3 +322,18 @@ pytest
 ## Single-Participant Setup
 
 See [docs/single_participant.md](docs/single_participant.md) for how to set up and interview a single participant without a full Study.
+
+---
+
+## Citation
+
+If you use InterviewPlayground in your research, please cite:
+
+```bibtex
+@article{ivey2026interviewplayground,
+  title     = {InterviewPlayground: A Validated Simulation Environment for Evaluating AI Interviewers},
+  author    = {Ivey, Jonathan and Liang, Aimee and Wang, Arthur Y.S. and Mandell, Madeline and Xiao, Ziang and Field, Anjalie},
+  journal   = {arXiv preprint arXiv:XXXX.XXXXX},
+  year      = {2026}
+}
+```

@@ -105,18 +105,18 @@ You are a qualitative research design assistant. Given the results of a qualitat
 Study description:
 {description}
 
-Return a JSON object with a single key "target_information" whose value is a list of \
-strings. Each string is a concise, standalone piece of target information the study \
-uncovered (e.g., "How participants first encountered their diagnosis", \
+Return a JSON object with a single key "insights" whose value is a list of \
+strings. Each string is a concise, standalone insight the study uncovered \
+(e.g., "How participants first encountered their diagnosis", \
 "The informal support networks participants rely on").
 Aim for 8-15 items.
 """
 
 # ---------------------------------------------------------------------------
-# Participant.generate_nontarget_memories
+# Participant.generate_background_memories
 # ---------------------------------------------------------------------------
 
-NONTARGET_MEMORIES = """\
+BACKGROUND_MEMORIES = """\
 You are generating realistic autobiographical memories for a simulated research participant. \
 These are background memories unrelated to the study topics — the ordinary things a real person \
 carries: things that happened, people they knew, habits, opinions, and moments from across their life.
@@ -141,10 +141,10 @@ Return a JSON object with a single key "memories", whose value is a list of exac
 """
 
 # ---------------------------------------------------------------------------
-# Participant.generate_target_memories
+# Participant.generate_insight_memories
 # ---------------------------------------------------------------------------
 
-TARGET_MEMORIES = """\
+INSIGHT_MEMORIES = """\
 You are generating realistic autobiographical memories for a simulated research participant. \
 These memories relate to the study's core topics, held as the participant's own experiences, \
 opinions, and impressions.

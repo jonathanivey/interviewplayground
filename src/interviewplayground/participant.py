@@ -91,16 +91,16 @@ class Participant:
         }
 
     def create_blank_memories(self, n: int) -> None:
-        """Append n blank Memory instances. Call before distribute_target_information."""
+        """Append n blank Memory instances. Call before distribute_insights."""
         for _ in range(n):
             self.memories.append(Memory())
 
-    def _build_nontarget_memories_prompt(self) -> tuple[str | None, int]:
-        slots = [m for m in self.memories if m.is_blank and not m.is_target]
+    def _build_background_memories_prompt(self) -> tuple[str | None, int]:
+        slots = [m for m in self.memories if m.is_blank and not m.is_insight]
         if not slots:
             return None, 0
         n = len(slots)
-        prompt = prompts.NONTARGET_MEMORIES.format(
+        prompt = prompts.BACKGROUND_MEMORIES.format(
             n=n,
             reflexive_count=prompts.memory_flag_range("reflexivity", self.reflexivity, n),
             sensitive_count=prompts.memory_flag_range("disclosure", self.disclosure, n),
@@ -108,24 +108,24 @@ class Participant:
         )
         return prompt, n
 
-    def _apply_nontarget_memories_result(self, generated: list[dict]) -> None:
-        slots = [m for m in self.memories if m.is_blank and not m.is_target]
+    def _apply_background_memories_result(self, generated: list[dict]) -> None:
+        slots = [m for m in self.memories if m.is_blank and not m.is_insight]
         for mem, data in zip(slots, generated):
             mem.content = data["content"]
             mem.reflexive = bool(data["reflexive"])
             mem.sensitive = bool(data["sensitive"])
 
-    def _build_target_memories_prompt(self, target_info: list[str]) -> tuple[str | None, int]:
-        slots = [m for m in self.memories if m.is_blank and m.is_target]
+    def _build_insight_memories_prompt(self, insights: list[str]) -> tuple[str | None, int]:
+        slots = [m for m in self.memories if m.is_blank and m.is_insight]
         if not slots:
             return None, 0
         topics = []
         for m in slots:
-            items = [target_info[i] for i in m.target_indices if i < len(target_info)]
+            items = [insights[i] for i in m.insight_indices if i < len(insights)]
             topics.append("; ".join(items))
         topics_list = "\n".join(f"{i + 1}. {t}" for i, t in enumerate(topics))
         n = len(slots)
-        prompt = prompts.TARGET_MEMORIES.format(
+        prompt = prompts.INSIGHT_MEMORIES.format(
             n=n,
             topics_list=topics_list,
             reflexive_count=prompts.memory_flag_range("reflexivity", self.reflexivity, n),
@@ -134,41 +134,41 @@ class Participant:
         )
         return prompt, n
 
-    def _apply_target_memories_result(self, generated: list[dict]) -> None:
-        slots = [m for m in self.memories if m.is_blank and m.is_target]
+    def _apply_insight_memories_result(self, generated: list[dict]) -> None:
+        slots = [m for m in self.memories if m.is_blank and m.is_insight]
         for mem, data in zip(slots, generated):
             mem.content = data["content"]
             mem.reflexive = bool(data["reflexive"])
             mem.sensitive = bool(data["sensitive"])
 
-    def generate_nontarget_memories(
+    def generate_background_memories(
         self,
         model: str | None = None,
         api_base: str | None = None,
         api_key: str | None = None,
     ) -> None:
-        """Fill all blank non-target memories using a single LLM call."""
-        prompt, n = self._build_nontarget_memories_prompt()
+        """Fill all blank background memories using a single LLM call."""
+        prompt, n = self._build_background_memories_prompt()
         if not n:
             return
         llm = LLMClient(model=model, api_base=api_base, api_key=api_key) if (model or api_base or api_key) else self._get_llm()
         result = llm.call(prompt, json_mode=True, schema=MEMORY_SCHEMA)
-        self._apply_nontarget_memories_result(result["memories"])
+        self._apply_background_memories_result(result["memories"])
 
-    def generate_target_memories(
+    def generate_insight_memories(
         self,
-        target_info: list[str],
+        insights: list[str],
         model: str | None = None,
         api_base: str | None = None,
         api_key: str | None = None,
     ) -> None:
-        """Fill all blank target memories using a single LLM call."""
-        prompt, n = self._build_target_memories_prompt(target_info)
+        """Fill all blank insight memories using a single LLM call."""
+        prompt, n = self._build_insight_memories_prompt(insights)
         if not n:
             return
         llm = LLMClient(model=model, api_base=api_base, api_key=api_key) if (model or api_base or api_key) else self._get_llm()
         result = llm.call(prompt, json_mode=True, schema=MEMORY_SCHEMA)
-        self._apply_target_memories_result(result["memories"])
+        self._apply_insight_memories_result(result["memories"])
 
     def ask(
         self,

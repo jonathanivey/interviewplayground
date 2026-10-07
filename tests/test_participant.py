@@ -29,7 +29,7 @@ def test_create_blank_memories():
     for m in p.memories:
         assert isinstance(m, Memory)
         assert m.is_blank
-        assert not m.is_target
+        assert not m.is_insight
 
 
 def test_create_blank_memories_appends():
@@ -39,7 +39,7 @@ def test_create_blank_memories_appends():
     assert len(p.memories) == 5
 
 
-def test_generate_nontarget_memories(mocker):
+def test_generate_background_memories(mocker):
     p = Participant()
     p.create_blank_memories(2)
 
@@ -54,7 +54,7 @@ def test_generate_nontarget_memories(mocker):
         return_value=fake_result,
     )
 
-    p.generate_nontarget_memories()
+    p.generate_background_memories()
 
     mock_call.assert_called_once()
     assert p.memories[0].content == "Memory A"
@@ -64,15 +64,15 @@ def test_generate_nontarget_memories(mocker):
     assert p.memories[1].sensitive is True
 
 
-def test_generate_nontarget_memories_skips_target_slots(mocker):
+def test_generate_background_memories_skips_insight_slots(mocker):
     p = Participant()
     p.create_blank_memories(3)
-    p.memories[0].target_indices = [0]  # mark one as target
+    p.memories[0].insight_indices = [0]  # mark one as insight
 
     fake_result = {
         "memories": [
-            {"content": "Non-target A", "reflexive": False, "sensitive": False},
-            {"content": "Non-target B", "reflexive": False, "sensitive": False},
+            {"content": "Non-insight A", "reflexive": False, "sensitive": False},
+            {"content": "Non-insight B", "reflexive": False, "sensitive": False},
         ]
     }
     mocker.patch(
@@ -80,25 +80,25 @@ def test_generate_nontarget_memories_skips_target_slots(mocker):
         return_value=fake_result,
     )
 
-    p.generate_nontarget_memories()
+    p.generate_background_memories()
 
-    # The target memory should still be blank
+    # The insight memory should still be blank
     assert p.memories[0].is_blank
     # The other two should be filled
-    non_target_contents = {m.content for m in p.memories if not m.is_target}
-    assert non_target_contents == {"Non-target A", "Non-target B"}
+    background_contents = {m.content for m in p.memories if not m.is_insight}
+    assert background_contents == {"Non-insight A", "Non-insight B"}
 
 
-def test_generate_target_memories(mocker):
+def test_generate_insight_memories(mocker):
     p = Participant()
     p.create_blank_memories(2)
-    p.memories[0].target_indices = [0]
-    p.memories[1].target_indices = [1]
+    p.memories[0].insight_indices = [0]
+    p.memories[1].insight_indices = [1]
 
     fake_result = {
         "memories": [
-            {"content": "Target mem 0", "reflexive": False, "sensitive": False},
-            {"content": "Target mem 1", "reflexive": True, "sensitive": True},
+            {"content": "Insight mem 0", "reflexive": False, "sensitive": False},
+            {"content": "Insight mem 1", "reflexive": True, "sensitive": True},
         ]
     }
     mock_call = mocker.patch(
@@ -106,15 +106,15 @@ def test_generate_target_memories(mocker):
         return_value=fake_result,
     )
 
-    target_info = ["Topic A", "Topic B"]
-    p.generate_target_memories(target_info)
+    insights = ["Topic A", "Topic B"]
+    p.generate_insight_memories(insights)
 
     mock_call.assert_called_once()
-    target_mems = [m for m in p.memories if m.is_target]
-    assert target_mems[0].content == "Target mem 0"
-    assert target_mems[1].content == "Target mem 1"
-    assert target_mems[1].reflexive is True
-    assert target_mems[1].sensitive is True
+    insight_mems = [m for m in p.memories if m.is_insight]
+    assert insight_mems[0].content == "Insight mem 0"
+    assert insight_mems[1].content == "Insight mem 1"
+    assert insight_mems[1].reflexive is True
+    assert insight_mems[1].sensitive is True
 
 
 def test_ask_appends_to_transcript(mocker):

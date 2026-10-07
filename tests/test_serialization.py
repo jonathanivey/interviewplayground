@@ -10,16 +10,16 @@ from interviewplayground import Memory, Participant, Study
 # ── Memory ──────────────────────────────────────────────────────────────────
 
 def test_memory_to_dict_roundtrip():
-    m = Memory(content="A vivid memory.", target_indices=[2], reflexive=True, sensitive=False)
+    m = Memory(content="A vivid memory.", insight_indices=[2], reflexive=True, sensitive=False)
     assert Memory.from_dict(m.to_dict()).content == m.content
-    assert Memory.from_dict(m.to_dict()).target_indices == [2]
+    assert Memory.from_dict(m.to_dict()).insight_indices == [2]
     assert Memory.from_dict(m.to_dict()).reflexive is True
 
 
 def test_memory_from_dict_blank():
-    m = Memory.from_dict({"content": "", "target_indices": [], "reflexive": False, "sensitive": False})
+    m = Memory.from_dict({"content": "", "insight_indices": [], "reflexive": False, "sensitive": False})
     assert m.is_blank
-    assert not m.is_target
+    assert not m.is_insight
 
 
 # ── Participant ──────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ def _sample_participant() -> Participant:
     p.verbosity = "Low"
     p.disclosure = "High"
     p.transcript = [{"role": "interviewer", "content": "Hello."}]
-    m = Memory(content="I remember something.", target_indices=[0], reflexive=True, sensitive=False)
+    m = Memory(content="I remember something.", insight_indices=[0], reflexive=True, sensitive=False)
     p.memories = [m, Memory()]
     return p
 
@@ -48,7 +48,7 @@ def test_participant_to_dict_roundtrip():
     assert p2.disclosure == "High"
     assert len(p2.memories) == 2
     assert p2.memories[0].content == "I remember something."
-    assert p2.memories[0].target_indices == [0]
+    assert p2.memories[0].insight_indices == [0]
     assert p2.memories[0].reflexive is True
     assert p2.memories[1].is_blank
     assert p2.transcript == [{"role": "interviewer", "content": "Hello."}]
@@ -85,12 +85,12 @@ def test_participant_load_missing_file():
 # ── Study ────────────────────────────────────────────────────────────────────
 
 def _sample_study() -> Study:
-    study = Study(target_information=["Topic A", "Topic B"])
+    study = Study(insights=["Topic A", "Topic B"])
     study.create_participants(2)
     study.participants[0].persona = "First participant."
     study.participants[0].create_blank_memories(3)
     study.participants[0].memories[0].content = "A filled memory."
-    study.participants[0].memories[0].target_indices = [0]
+    study.participants[0].memories[0].insight_indices = [0]
     study.participants[1].persona = "Second participant."
     return study
 
@@ -101,11 +101,11 @@ def test_study_save_load(tmp_path):
     study.save(filepath)
 
     study2 = Study.load(filepath)
-    assert study2.target_information == ["Topic A", "Topic B"]
+    assert study2.insights == ["Topic A", "Topic B"]
     assert study2.n == 2
     assert study2.participants[0].persona == "First participant."
     assert study2.participants[0].memories[0].content == "A filled memory."
-    assert study2.participants[0].memories[0].target_indices == [0]
+    assert study2.participants[0].memories[0].insight_indices == [0]
     assert study2.participants[1].persona == "Second participant."
 
 
@@ -122,7 +122,7 @@ def test_study_save_load_roundtrip_preserves_interview_guide(tmp_path):
 def test_study_load_defaults_interview_guide_when_absent(tmp_path):
     filepath = tmp_path / "study.json"
     filepath.write_text(json.dumps({
-        "target_information": ["A"], "research_questions": [], "participants": [],
+        "insights": ["A"], "research_questions": [], "participants": [],
     }))
 
     study = Study.load(str(filepath))
@@ -135,7 +135,7 @@ def test_study_save_is_valid_json(tmp_path):
     study.save(str(filepath))
     with open(filepath, encoding="utf-8") as f:
         data = json.load(f)
-    assert "target_information" in data
+    assert "insights" in data
     assert "participants" in data
     assert len(data["participants"]) == 2
 

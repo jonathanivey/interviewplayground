@@ -13,10 +13,10 @@ def test_load_preset_returns_study(name):
 
 
 @pytest.mark.parametrize("name", PRESET_NAMES)
-def test_preset_has_target_information(name):
+def test_preset_has_insights(name):
     study = load_preset(name)
-    assert len(study.target_information) >= 8
-    for item in study.target_information:
+    assert len(study.insights) >= 8
+    for item in study.insights:
         assert isinstance(item, str) and item
 
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 @dataclass
 class Memory:
     content: str = ""
-    target_indices: list[int] = field(default_factory=list)
+    insight_indices: list[int] = field(default_factory=list)
     reflexive: bool = False
     sensitive: bool = False
 
@@ -17,13 +17,13 @@ class Memory:
         return self.content == ""
 
     @property
-    def is_target(self) -> bool:
-        return len(self.target_indices) > 0
+    def is_insight(self) -> bool:
+        return len(self.insight_indices) > 0
 
     def to_dict(self) -> dict:
         return {
             "content": self.content,
-            "target_indices": self.target_indices,
+            "insight_indices": self.insight_indices,
             "reflexive": self.reflexive,
             "sensitive": self.sensitive,
         }
@@ -32,7 +32,7 @@ class Memory:
     def from_dict(cls, data: dict) -> "Memory":
         m = cls()
         m.content = data["content"]
-        m.target_indices = data["target_indices"]
+        m.insight_indices = data["insight_indices"]
         m.reflexive = data["reflexive"]
         m.sensitive = data["sensitive"]
         return m

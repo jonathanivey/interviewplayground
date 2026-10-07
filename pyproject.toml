@@ -30,9 +30,9 @@ dev = ["pytest>=8.0", "pytest-mock>=3.0"]
 gemini-batch = ["google-genai>=1.0.0"]
 
 [project.urls]
-Homepage = "https://github.com/<github-username>/interviewplayground"
-Repository = "https://github.com/<github-username>/interviewplayground"
-Issues = "https://github.com/<github-username>/interviewplayground/issues"
+Homepage = "https://github.com/jonathanivey/interviewplayground"
+Repository = "https://github.com/jonathanivey/interviewplayground"
+Issues = "https://github.com/jonathanivey/interviewplayground/issues"
 
 [tool.hatch.version]
 path = "src/interviewplayground/__init__.py"
