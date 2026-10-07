@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "interviewplayground"
+dynamic = ["version"]
+description = "AI-simulated interview participants for qualitative research"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Jonathan Ivey", email = "jivey6@jh.edu" }]
+keywords = ["qualitative research", "participant simulation", "interview", "llm"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "litellm>=1.40.0",
+    "textstat>=0.7.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-mock>=3.0"]
+gemini-batch = ["google-genai>=1.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/<github-username>/interviewplayground"
+Repository = "https://github.com/<github-username>/interviewplayground"
+Issues = "https://github.com/<github-username>/interviewplayground/issues"
+
+[tool.hatch.version]
+path = "src/interviewplayground/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/interviewplayground"]
