@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "interviewplayground"
 dynamic = ["version"]
 description = "AI-simulated interview participants for qualitative research"
-readme = "README.md"
+readme = "README_PYPI.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Jonathan Ivey", email = "jivey6@jh.edu" }]
