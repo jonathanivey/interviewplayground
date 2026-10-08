@@ -101,7 +101,6 @@ Three approaches, applied in priority order:
 response = p.ask("How did you cope?", model="gpt-5.5")
 p.generate_insight_memories(topics, model="gpt-5.5")
 p.generate_background_memories(model="gpt-5.5")
-study = Study.from_description(description, model="gpt-5.5")
 ```
 
 **2. `set_default_model()`** — sets the default for the entire session. Takes priority over the environment variable:

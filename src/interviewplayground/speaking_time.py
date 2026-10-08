@@ -6,18 +6,6 @@ per-response delay for the time it takes to start answering. Both the rate
 and the delay depend on the participant's Verbosity trait ("Low"/"Medium"/
 "High", see prompts.TRAIT_DESCRIPTIONS): participants who give longer answers
 also articulate faster, but take longer to start answering.
-
-Fit with Theil-Sen regression of real participant turn durations
-(question_asked_at to answer_received_at) against transcript syllable count,
-per Verbosity tier (tiers derived via k-means clustering on average words per
-answer). See docs/VERBOSITY_SPEECH_RATE_CALIBRATION.md for the full
-methodology. The fitted rates are well below literature articulation rates
-(201-324 SPM) because turn duration includes in-answer thinking pauses, not
-just articulation.
-
-Note: textstat counts each number as a single syllable (e.g. "2026" and
-"$5,000" each contribute one), so the spoken duration of long numbers is
-underestimated.
 """
 
 import textstat

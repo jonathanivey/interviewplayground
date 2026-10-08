@@ -6,7 +6,6 @@ import warnings
 
 from .llm_client import LLMClient
 from .participant import Participant, MEMORY_SCHEMA
-from . import prompts
 from .interviewreportcard import (
     evaluate_participant_responses,
     evaluate_interviewer_behavior,
@@ -30,20 +29,6 @@ class Study:
     @property
     def n(self) -> int:
         return len(self.participants)
-
-    @classmethod
-    def from_description(
-        cls,
-        description: str,
-        model: str | None = None,
-        api_base: str | None = None,
-        api_key: str | None = None,
-    ) -> "Study":
-        """Generate insights from a qualitative study description using an LLM."""
-        llm = LLMClient(model=model, api_base=api_base, api_key=api_key)
-        prompt = prompts.STUDY_FROM_DESCRIPTION.format(description=description)
-        result = llm.call(prompt, json_mode=True)
-        return cls(insights=result["insights"])
 
     def save(self, filepath: str) -> None:
         """Save this study to a JSON file."""

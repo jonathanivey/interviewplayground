@@ -97,22 +97,6 @@ def memory_flag_range(trait: str, value: str, n: int) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Study.from_description
-# ---------------------------------------------------------------------------
-
-STUDY_FROM_DESCRIPTION = """\
-You are a qualitative research design assistant. Given the results of a qualitative study, identify the key pieces of information or findings that the study uncovered.
-Study description:
-{description}
-
-Return a JSON object with a single key "insights" whose value is a list of \
-strings. Each string is a concise, standalone insight the study uncovered \
-(e.g., "How participants first encountered their diagnosis", \
-"The informal support networks participants rely on").
-Aim for 8-15 items.
-"""
-
-# ---------------------------------------------------------------------------
 # Participant.generate_background_memories
 # ---------------------------------------------------------------------------
 

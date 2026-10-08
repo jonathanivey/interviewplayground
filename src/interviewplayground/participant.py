@@ -9,8 +9,7 @@ from .memory import Memory
 from . import prompts
 
 
-# JSON Schema for constrained memory-generation decoding (reliable JSON from
-# Gemini 3 thinking models). Shared by sequential (Participant) and batch (Study).
+# JSON Schema for constrained memory-generation decoding Shared by sequential (Participant) and batch (Study).
 MEMORY_SCHEMA = {
     "type": "object",
     "properties": {

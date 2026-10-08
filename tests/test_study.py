@@ -109,16 +109,3 @@ def test_evaluate_forwards_use_batch(mocker):
     assert mock_rq.call_args.kwargs["use_batch"] is True
     assert mock_ib.call_args.kwargs["use_batch"] is True
     assert mock_pe.call_args.kwargs["use_batch"] is True
-
-
-def test_from_description_calls_llm(mocker):
-    mock_call = mocker.patch(
-        "interviewplayground.llm_client.LLMClient.call",
-        return_value={"insights": ["Topic A", "Topic B", "Topic C"]},
-    )
-
-    study = Study.from_description("A study about something.")
-
-    mock_call.assert_called_once()
-    assert study.insights == ["Topic A", "Topic B", "Topic C"]
-    assert study.n == 0

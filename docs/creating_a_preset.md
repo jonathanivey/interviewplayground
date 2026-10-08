@@ -2,25 +2,13 @@
 
 Most users should start with the built-in presets (see the main [README](../README.md)). This guide is for building a `Study` from scratch — for a new interview topic, a new participant population, or a custom preset you want to reuse.
 
-## Step 1 — Generate insights from a study description
+## Step 1 — Identify insights
+
+Manually identify the key findings that you want the simulated participants to be able to produce.
 
 ```python
 from interviewplayground import Study
 
-study = Study.from_description("""
-    A grounded theory study examining how informal caregivers of adults with dementia
-    manage their own wellbeing while providing care. We are interested in the strategies
-    they use, the support networks they rely on, and how their identity changes over time.
-""")
-
-print(study.insights)
-# ['How caregivers first took on the caregiving role and whether it was a choice',
-#  'Daily routines caregivers use to maintain their own mental health', ...]
-```
-
-Or supply your own list directly:
-
-```python
 study = Study(insights=[
     "How caregivers first took on the caregiving role",
     "Support networks caregivers rely on",
@@ -69,7 +57,7 @@ study.distribute_insights(
 )
 ```
 
-This assigns insight indices to blank memory slots across participants. Participants will know about different subsets of the study's insights — like real study participants.
+This assigns insight indices to blank memory slots across participants. Participants will know about different subsets of the study's insights.
 
 ## Step 5 — Generate background memories
 
@@ -87,7 +75,7 @@ for p in study.participants:
     p.generate_insight_memories(study.insights)
 ```
 
-One LLM call per participant. Fills blank insight memory slots with memories grounded in the corresponding insight items.
+One LLM call per participant. Fills blank insight memory slots with memories grounded in the assigned insights.
 
 ## Step 7 — Interview participants
 

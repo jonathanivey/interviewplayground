@@ -7,3 +7,17 @@ dist/
 build/
 .env
 .DS_Store
+
+# Generated outputs from experiments/ scripts
+experiments/predictive_validity/results/
+experiments/predictive_validity/evaluations/
+experiments/predictive_validity/comparisons/
+experiments/predictive_validity/tables/
+experiments/predictive_validity/figures/
+experiments/predictive_validity/eval_handles.json
+experiments/robustness/*/results/
+experiments/robustness/*/evaluations/
+experiments/robustness/*/comparisons/
+experiments/robustness/*/eval_handles.json
+experiments/robustness/tables/
+human_data/
