@@ -6,7 +6,7 @@
 
 <div align="center">
 
-[![Paper](https://img.shields.io/badge/Paper-arXiv-red.svg)](https://arxiv.org/abs/XXXX.XXXXX)
+[![Paper](https://img.shields.io/badge/Paper-arXiv-red.svg)](https://arxiv.org/abs/2610.12023)
 [![pypi](https://img.shields.io/pypi/v/interviewplayground.svg)](https://pypi.org/project/interviewplayground/)
 [![versions](https://img.shields.io/pypi/pyversions/interviewplayground.svg)](https://pypi.org/project/interviewplayground/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -16,11 +16,14 @@
 InterviewPlayground is a simulation environment for evaluating AI interviewers using simulated study participants whose behaviors are grounded in social theory. Simulated studies in InterviewPlayground produce an InterviewReportCard, which assesses the performance of AI interviewers using a suite of validated measures. InterviewPlayground also includes three simulation settings based on real interview studies in public health, political science, and human-computer interaction. In our paper, we validate these settings by comparing them to 15 real qualitative studies with 450 human participants and demonstrating that the performance of an AI interviewer in InterviewPlayground predicts their performance in human studies.
 
 ```bibtex
-@article{ivey2026interviewplayground,
-  title     = {InterviewPlayground: A Validated Simulation Environment for Evaluating AI Interviewers},
-  author    = {Ivey, Jonathan and Liang, Aimee and Wang, Arthur Y.S. and Mandell, Madeline and Xiao, Ziang and Field, Anjalie},
-  journal   = {arXiv preprint arXiv:XXXX.XXXXX},
-  year      = {2026}
+@misc{ivey2026interviewplaygroundsimulationenvironmentevaluating,
+      title={InterviewPlayground: A Validated Simulation Environment for Evaluating AI Interviewers}, 
+      author={Jonathan Ivey and Aimee Liang and Arthur Y. S. Wang and Madeline Mandell and Ziang Xiao and Anjalie Field},
+      year={2026},
+      eprint={2610.12023},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2610.12023}, 
 }
 ```
 
